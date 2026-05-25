@@ -38,9 +38,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF is disabled because this is a stateless REST API consumed by Swagger/Postman.
-                // Session-based login still works; clients authenticate per request via session cookie after login.
-                // For browser form posts to mutating endpoints, re-enable CSRF or use a token-based API (JWT).
+                // CSRF disabled: REST API only, no HTML forms.
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .sessionManagement(session -> session
@@ -59,11 +57,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/auth/me").authenticated()
                         .anyRequest().authenticated())
-                // Use the same JSON entry point for Basic auth so the browser does not show
-                // a native username/password popup (WWW-Authenticate loop in Swagger UI).
+                // JSON 401 for Basic auth (no browser popup).
                 .httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint))
-                // Logout is implemented as a controller endpoint (AuthController#logout)
-                // so it appears in Swagger UI. Spring Security's built-in /logout filter is disabled.
+                // Logout handled by AuthController.
                 .logout(logout -> logout.disable());
 
         return http.build();
