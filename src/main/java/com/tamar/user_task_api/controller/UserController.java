@@ -1,9 +1,18 @@
 package com.tamar.user_task_api.controller;
 
 import com.tamar.user_task_api.dto.request.UserCreateRequest;
+import com.tamar.user_task_api.dto.request.UserUpdateRequest;
 import com.tamar.user_task_api.dto.response.UserResponse;
+import com.tamar.user_task_api.exception.ErrorResponse;
 import com.tamar.user_task_api.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,37 +31,80 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "User management endpoints (ADMIN restrictions apply)")
+@SecurityRequirement(name = "basicAuth")
 public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "Create user")
+    @Operation(summary = "Create user (ADMIN only)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "User created"),
+            @ApiResponse(responseCode = "400", description = "Validation failed",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "ADMIN role required",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Email already exists",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
     }
 
-    @Operation(summary = "Get all users")
+    @Operation(summary = "Get all users (ADMIN only)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of users"),
+            @ApiResponse(responseCode = "403", description = "ADMIN role required",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAll() {
         return ResponseEntity.ok(userService.findAll());
     }
 
-    @Operation(summary = "Get user by id")
+    @Operation(summary = "Get user by id (authenticated)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getById(
+            @Parameter(description = "User ID") @PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));
     }
 
-    @Operation(summary = "Update user")
+    @Operation(summary = "Update user (authenticated)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User updated"),
+            @ApiResponse(responseCode = "400", description = "Validation failed",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Email already exists",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserCreateRequest request) {
+    public ResponseEntity<UserResponse> update(
+            @Parameter(description = "User ID") @PathVariable Long id,
+            @Valid @RequestBody UserUpdateRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
-    @Operation(summary = "Delete user")
+    @Operation(summary = "Delete user (ADMIN only)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User deleted"),
+            @ApiResponse(responseCode = "403", description = "ADMIN role required",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "User ID") @PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
