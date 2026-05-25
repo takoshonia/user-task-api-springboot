@@ -53,12 +53,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse update(Long id, UserUpdateRequest request) {
         User existingUser = findUserById(id);
-        if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
-            throw new DuplicateEmailException(request.email());
+
+        if (request.name() != null && !request.name().isBlank()) {
+            existingUser.setName(request.name());
         }
 
-        existingUser.setName(request.name());
-        existingUser.setEmail(request.email());
+        if (request.email() != null && !request.email().isBlank()
+                && !request.email().equals(existingUser.getEmail())) {
+            if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
+                throw new DuplicateEmailException(request.email());
+            }
+            existingUser.setEmail(request.email());
+        }
+
         return toResponse(userRepository.save(existingUser));
     }
 
