@@ -14,9 +14,6 @@ public record TaskCreateRequest(
         String description,
 
         @NotNull(message = "Status is required")
-        TaskStatus status,
-
-        @NotNull(message = "User ID is required")
-        Long userId
+        TaskStatus status
 ) {
 }

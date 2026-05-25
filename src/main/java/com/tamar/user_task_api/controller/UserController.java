@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,30 +64,36 @@ public class UserController {
         return ResponseEntity.ok(userService.findAll());
     }
 
-    @Operation(summary = "Get user by id (authenticated)")
+    @Operation(summary = "Get user by id (self or ADMIN)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found"),
             @ApiResponse(responseCode = "401", description = "Not authenticated",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not allowed to access this profile",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.user.id")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getById(
             @Parameter(description = "User ID") @PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));
     }
 
-    @Operation(summary = "Update user (authenticated)")
+    @Operation(summary = "Update user (self or ADMIN)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User updated"),
             @ApiResponse(responseCode = "400", description = "Validation failed",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not allowed to update this profile",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "Email already exists",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.user.id")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
             @Parameter(description = "User ID") @PathVariable Long id,

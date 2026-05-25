@@ -36,12 +36,12 @@ public class TaskController {
 
     private final TaskService taskService;
 
-    @Operation(summary = "Create task (authenticated)")
+    @Operation(summary = "Create task (owner = current authenticated user)")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Task created"),
-            @ApiResponse(responseCode = "401", description = "Not authenticated",
+            @ApiResponse(responseCode = "400", description = "Validation failed",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "User not found",
+            @ApiResponse(responseCode = "401", description = "Not authenticated",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
@@ -49,16 +49,18 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.CREATED).body(taskService.create(request));
     }
 
-    @Operation(summary = "Get all tasks (authenticated)")
+    @Operation(summary = "Get tasks (own tasks for USER, all tasks for ADMIN)")
     @ApiResponse(responseCode = "200", description = "List of tasks")
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAll() {
         return ResponseEntity.ok(taskService.findAll());
     }
 
-    @Operation(summary = "Get task by id (authenticated)")
+    @Operation(summary = "Get task by id (owner or ADMIN)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Task found"),
+            @ApiResponse(responseCode = "403", description = "Not the task owner",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Task not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -68,10 +70,12 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findById(id));
     }
 
-    @Operation(summary = "Update task (authenticated)")
+    @Operation(summary = "Update task (owner or ADMIN)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Task updated"),
-            @ApiResponse(responseCode = "404", description = "Task or user not found",
+            @ApiResponse(responseCode = "403", description = "Not the task owner",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Task not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/{id}")
@@ -81,9 +85,11 @@ public class TaskController {
         return ResponseEntity.ok(taskService.update(id, request));
     }
 
-    @Operation(summary = "Delete task (authenticated)")
+    @Operation(summary = "Delete task (owner or ADMIN)")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Task deleted"),
+            @ApiResponse(responseCode = "403", description = "Not the task owner",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Task not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })

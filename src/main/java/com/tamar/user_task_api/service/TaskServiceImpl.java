@@ -2,13 +2,18 @@ package com.tamar.user_task_api.service;
 
 import com.tamar.user_task_api.dto.request.TaskCreateRequest;
 import com.tamar.user_task_api.dto.response.TaskResponse;
+import com.tamar.user_task_api.entity.Role;
 import com.tamar.user_task_api.entity.Task;
 import com.tamar.user_task_api.entity.User;
 import com.tamar.user_task_api.exception.ResourceNotFoundException;
 import com.tamar.user_task_api.repository.TaskRepository;
 import com.tamar.user_task_api.repository.UserRepository;
+import com.tamar.user_task_api.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,13 +30,13 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     @PreAuthorize("isAuthenticated()")
     public TaskResponse create(TaskCreateRequest request) {
-        User user = findUserById(request.userId());
+        User owner = getCurrentUser();
 
         Task task = new Task();
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setStatus(request.status());
-        task.setUser(user);
+        task.setUser(owner);
 
         return toResponse(taskRepository.save(task));
     }
@@ -40,17 +45,20 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     public List<TaskResponse> findAll() {
-        return taskRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        List<Task> tasks = isAdmin()
+                ? taskRepository.findAll()
+                : taskRepository.findByUserId(getCurrentUser().getId());
+
+        return tasks.stream().map(this::toResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     public TaskResponse findById(Long id) {
-        return toResponse(findTaskById(id));
+        Task task = findTaskById(id);
+        ensureCanAccess(task);
+        return toResponse(task);
     }
 
     @Override
@@ -58,12 +66,11 @@ public class TaskServiceImpl implements TaskService {
     @PreAuthorize("isAuthenticated()")
     public TaskResponse update(Long id, TaskCreateRequest request) {
         Task existingTask = findTaskById(id);
-        User user = findUserById(request.userId());
+        ensureCanAccess(existingTask);
 
         existingTask.setTitle(request.title());
         existingTask.setDescription(request.description());
         existingTask.setStatus(request.status());
-        existingTask.setUser(user);
 
         return toResponse(taskRepository.save(existingTask));
     }
@@ -73,17 +80,38 @@ public class TaskServiceImpl implements TaskService {
     @PreAuthorize("isAuthenticated()")
     public void delete(Long id) {
         Task existingTask = findTaskById(id);
+        ensureCanAccess(existingTask);
         taskRepository.delete(existingTask);
-    }
-
-    private User findUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
 
     private Task findTaskById(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+    }
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        return userRepository.findById(principal.getUser().getId())
+                .orElseThrow(() -> new AccessDeniedException("Authenticated user no longer exists"));
+    }
+
+    private boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + Role.ADMIN.name()));
+    }
+
+    private void ensureCanAccess(Task task) {
+        if (isAdmin()) {
+            return;
+        }
+        User current = getCurrentUser();
+        if (!task.getUser().getId().equals(current.getId())) {
+            throw new AccessDeniedException("You do not have access to this task");
+        }
     }
 
     private TaskResponse toResponse(Task task) {
