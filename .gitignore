@@ -1,26 +1,30 @@
 HELP.md
+
+### Build output (regenerated with mvn spring-boot:run / mvn package) ###
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 out/
+build/
+bin/
 *.class
 
-### Logs ###
-*.log
+### Runtime logs (created on first run; path documented in README) ###
 logs/
+*.log
 
-### Local environment files ###
+### Local secrets ###
 .env
 .env.*
 !.env.example
 
-### H2 Database files ###
+### H2 database files ###
 *.mv.db
 *.trace.db
 *.h2.db
 
-### STS ###
+### Maven wrapper jar (downloaded by mvnw) ###
+.mvn/wrapper/maven-wrapper.jar
+
+### STS / Eclipse ###
 .apt_generated
 .classpath
 .factorypath
@@ -41,9 +45,6 @@ logs/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/

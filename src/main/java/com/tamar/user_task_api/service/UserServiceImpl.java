@@ -7,7 +7,6 @@ import com.tamar.user_task_api.entity.User;
 import com.tamar.user_task_api.exception.DuplicateEmailException;
 import com.tamar.user_task_api.exception.ResourceNotFoundException;
 import com.tamar.user_task_api.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,11 +14,15 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")

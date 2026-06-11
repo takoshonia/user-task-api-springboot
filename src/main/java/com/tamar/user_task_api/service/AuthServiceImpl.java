@@ -7,18 +7,25 @@ import com.tamar.user_task_api.entity.User;
 import com.tamar.user_task_api.exception.DuplicateEmailException;
 import com.tamar.user_task_api.repository.UserRepository;
 import com.tamar.user_task_api.security.UserPrincipal;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public UserResponse register(RegisterRequest request) {
@@ -32,7 +39,9 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(Role.USER);
 
-        return toResponse(userRepository.save(user));
+        User saved = userRepository.save(user);
+        log.info("User registered: {}", saved.getEmail());
+        return toResponse(saved);
     }
 
     @Override

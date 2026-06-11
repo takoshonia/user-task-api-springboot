@@ -9,7 +9,8 @@ import com.tamar.user_task_api.exception.ResourceNotFoundException;
 import com.tamar.user_task_api.repository.TaskRepository;
 import com.tamar.user_task_api.repository.UserRepository;
 import com.tamar.user_task_api.security.UserPrincipal;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,11 +21,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
+
+    private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+
+    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository) {
+        this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
+    }
 
     @Override
     @Transactional
@@ -38,7 +45,9 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(request.status());
         task.setUser(owner);
 
-        return toResponse(taskRepository.save(task));
+        Task saved = taskRepository.save(task);
+        log.info("Task created with id {} for user {}", saved.getId(), owner.getId());
+        return toResponse(saved);
     }
 
     @Override
@@ -82,6 +91,7 @@ public class TaskServiceImpl implements TaskService {
         Task existingTask = findTaskById(id);
         ensureCanAccess(existingTask);
         taskRepository.delete(existingTask);
+        log.debug("Task deleted with id {}", id);
     }
 
     private Task findTaskById(Long id) {

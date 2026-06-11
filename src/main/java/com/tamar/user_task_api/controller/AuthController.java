@@ -16,7 +16,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,12 +38,26 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 @Tag(name = "Authentication", description = "Registration, login, logout, and profile")
 public class AuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
+    private final MessageSource messageSource;
+
+    public AuthController(AuthService authService,
+                          AuthenticationManager authenticationManager,
+                          MessageSource messageSource) {
+        this.authService = authService;
+        this.authenticationManager = authenticationManager;
+        this.messageSource = messageSource;
+    }
+
+    private String msg(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+    }
 
     @Operation(summary = "Register a new user (public, assigns USER role)")
     @SecurityRequirements
@@ -75,7 +92,8 @@ public class AuthController {
         httpRequest.getSession(true).setAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
-        return ResponseEntity.ok(Map.of("message", "Login successful"));
+        log.info("User logged in: {}", request.email());
+        return ResponseEntity.ok(Map.of("message", msg("success.login")));
     }
 
     @Operation(summary = "Get current authenticated user profile")
@@ -99,6 +117,7 @@ public class AuthController {
             session.invalidate();
         }
         SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(Map.of("message", "Logout successful"));
+        log.info("User logged out");
+        return ResponseEntity.ok(Map.of("message", msg("success.logout")));
     }
 }

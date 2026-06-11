@@ -9,10 +9,9 @@ Spring Boot REST API for managing users and their tasks. Uses Spring Security wi
 - Spring Web
 - Spring Data JPA (Hibernate)
 - Spring Security (HTTP Basic + JSON login, BCrypt, method security)
-- H2 Database
+- H2 Database (dev) / PostgreSQL (prod)
 - Bean Validation
 - SpringDoc OpenAPI (Swagger)
-- Lombok
 
 ## Project structure
 
@@ -36,9 +35,89 @@ Layered architecture:
 
 ## How to run
 
-1. Open the project in IntelliJ or Cursor.
-2. Run `UserTaskApiApplication`.
-3. Application starts on http://localhost:8081.
+**IDE:** Run `UserTaskApiApplication` (active profile `dev` by default).
+
+**Terminal (dev):**
+
+```powershell
+mvn spring-boot:run
+```
+
+**Terminal (prod):** needs local PostgreSQL (`usertaskdb`). Set credentials in `application-prod.properties`.
+
+```powershell
+mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
+```
+
+Dev uses H2 and seeds test users. Prod uses PostgreSQL. App runs on http://localhost:8081.
+
+### Profiles
+
+| Profile | Database | Logging | Notes |
+| ------- | -------- | ------- | ----- |
+| `dev` (default) | H2 in-memory | DEBUG / INFO | Seeds admin and user accounts on startup |
+| `prod` | PostgreSQL | WARN / ERROR | No seed data; set DB password in `application-prod.properties` |
+
+**IDE:** Run `UserTaskApiApplication` → Run Configuration → Active profiles: `dev` or `prod`.
+
+**Command line:**
+
+```powershell
+# dev (default)
+mvn spring-boot:run
+
+# prod
+mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
+```
+
+Config files: `application.properties` (shared), `application-dev.properties`, `application-prod.properties`.
+
+### Custom properties (`app.settings`)
+
+Defined in `AppSettings` (`@ConfigurationProperties`, `@Validated`):
+
+| Property | Role |
+| -------- | ---- |
+| `app.settings.application-title` | API title shown in `GET /api/info` |
+| `app.settings.pagination-limit` | Page size limit (metadata) |
+| `app.settings.contact-email` | Contact email (metadata) |
+
+Dev example: title `User Task API (Dev)`, limit `10`, email `dev@example.com`.  
+Prod example: title `User Task API`, limit `50`, email `support@example.com`.
+
+### Internationalization (i18n)
+
+Bundles: `messages.properties` (Georgian default), `messages_en.properties` (English). UTF-8 encoding via `spring.messages.encoding=UTF-8`.
+
+Locale is resolved from the `Accept-Language` header (`AcceptHeaderLocaleResolver`). Supported: `ka` (default), `en`.
+
+Localized responses:
+
+- Error payloads from `GlobalExceptionHandler` (404, 409, 403, 401, 400, 500)
+- Security errors from `RestAuthenticationEntryPoint` and `RestAccessDeniedHandler`
+- Success messages on `POST /api/auth/login` and `POST /api/auth/logout`
+- Validation field errors on `POST /api/auth/register` (`name`, `email` use bundle keys)
+
+**How to test:** In Swagger, set **Accept-Language** to `en` or `ka`, then:
+
+1. `GET /api/tasks` without auth → 401 message changes by language
+2. `POST /api/auth/register` with empty body → field errors change by language
+3. `POST /api/auth/login` with valid credentials → success message changes by language
+
+### Logging
+
+SLF4J logging in `AuthController`, `AuthServiceImpl`, `TaskServiceImpl`, and `GlobalExceptionHandler`.
+
+| Level | Where |
+| ----- | ----- |
+| INFO | User registration, login, task creation |
+| DEBUG | Task deletion (dev profile) |
+| WARN | Validation, access denied, not found, bad credentials |
+| ERROR | Unexpected exceptions |
+
+Log file path: **`logs/app.log`** (project root). Rotation: 10 MB per file, 7 days history. The `logs/` folder is gitignored.
+
+---
 
 ## Useful URLs
 
@@ -80,7 +159,7 @@ Passwords are stored using BCrypt (`BCryptPasswordEncoder`).
 }
 ```
 
-3. Execute. You should get 200 and `"Login successful"`.
+3. Execute. You should get 200 and a localized success message (`Accept-Language` applies).
 4. Then call `GET /api/auth/me` or any task endpoint in the same tab.
 
 **Option B: HTTP Basic in Swagger**
@@ -110,6 +189,7 @@ Use the same browser tab so the session cookie is sent.
 
 | Endpoint                                     | Access                                       |
 | -------------------------------------------- | -------------------------------------------- |
+| `GET /api/info`                              | Public                                       |
 | `POST /api/auth/register`                    | Public                                       |
 | `POST /api/auth/login`                       | Public                                       |
 | `POST /api/auth/logout`                      | Authenticated                                |
@@ -145,7 +225,7 @@ Enabled via `@EnableMethodSecurity` in `SecurityConfig`. Examples:
 
 ### CSRF
 
-CSRF is disabled in `SecurityConfig`. This is a REST API used through Swagger and Postman, not browser HTML forms, so CSRF tokens are not needed here. If HTML forms are added later, CSRF should be enabled again.
+Disabled in `SecurityConfig` (REST API, no HTML forms).
 
 ---
 
@@ -153,6 +233,7 @@ CSRF is disabled in `SecurityConfig`. This is a REST API used through Swagger an
 
 ### Authentication
 
+- `GET /api/info` - public app settings
 - `POST /api/auth/register` - public registration
 - `POST /api/auth/login` - JSON login
 - `POST /api/auth/logout` - logout
