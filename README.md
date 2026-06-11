@@ -49,14 +49,16 @@ mvn spring-boot:run
 mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
-Dev uses H2 and seeds test users. Prod uses PostgreSQL. App runs on http://localhost:8081.
+Dev uses H2 and seeds test users. Prod uses PostgreSQL. App runs on [http://localhost:8081](http://localhost:8081).
 
 ### Profiles
 
-| Profile | Database | Logging | Notes |
-| ------- | -------- | ------- | ----- |
-| `dev` (default) | H2 in-memory | DEBUG / INFO | Seeds admin and user accounts on startup |
-| `prod` | PostgreSQL | WARN / ERROR | No seed data; set DB password in `application-prod.properties` |
+
+| Profile         | Database     | Logging      | Notes                                                          |
+| --------------- | ------------ | ------------ | -------------------------------------------------------------- |
+| `dev` (default) | H2 in-memory | DEBUG / INFO | Seeds admin and user accounts on startup                       |
+| `prod`          | PostgreSQL   | WARN / ERROR | No seed data; set DB password in `application-prod.properties` |
+
 
 **IDE:** Run `UserTaskApiApplication` → Run Configuration → Active profiles: `dev` or `prod`.
 
@@ -76,11 +78,13 @@ Config files: `application.properties` (shared), `application-dev.properties`, `
 
 Defined in `AppSettings` (`@ConfigurationProperties`, `@Validated`):
 
-| Property | Role |
-| -------- | ---- |
+
+| Property                         | Role                               |
+| -------------------------------- | ---------------------------------- |
 | `app.settings.application-title` | API title shown in `GET /api/info` |
-| `app.settings.pagination-limit` | Page size limit (metadata) |
-| `app.settings.contact-email` | Contact email (metadata) |
+| `app.settings.pagination-limit`  | Page size limit (metadata)         |
+| `app.settings.contact-email`     | Contact email (metadata)           |
+
 
 Dev example: title `User Task API (Dev)`, limit `10`, email `dev@example.com`.  
 Prod example: title `User Task API`, limit `50`, email `support@example.com`.
@@ -108,21 +112,23 @@ Localized responses:
 
 SLF4J logging in `AuthController`, `AuthServiceImpl`, `TaskServiceImpl`, and `GlobalExceptionHandler`.
 
-| Level | Where |
-| ----- | ----- |
-| INFO | User registration, login, task creation |
-| DEBUG | Task deletion (dev profile) |
-| WARN | Validation, access denied, not found, bad credentials |
-| ERROR | Unexpected exceptions |
 
-Log file path: **`logs/app.log`** (project root). Rotation: 10 MB per file, 7 days history. The `logs/` folder is gitignored.
+| Level | Where                                                 |
+| ----- | ----------------------------------------------------- |
+| INFO  | User registration, login, task creation               |
+| DEBUG | Task deletion (dev profile)                           |
+| WARN  | Validation, access denied, not found, bad credentials |
+| ERROR | Unexpected exceptions                                 |
+
+
+Log file path: `**logs/app.log`** (project root). Rotation: 10 MB per file, 7 days history. The `logs/` folder is gitignored.
 
 ---
 
 ## Useful URLs
 
-- Swagger UI: http://localhost:8081/swagger-ui.html
-- H2 Console: http://localhost:8081/h2-console
+- Swagger UI: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+- H2 Console: [http://localhost:8081/h2-console](http://localhost:8081/h2-console)
 
 H2 login values:
 
@@ -136,10 +142,12 @@ H2 login values:
 
 ### Login credentials (seeded on startup)
 
+
 | Email               | Password   | Role  |
 | ------------------- | ---------- | ----- |
 | `admin@example.com` | `admin123` | ADMIN |
 | `user@example.com`  | `user123`  | USER  |
+
 
 New accounts can be created via `POST /api/auth/register`. They always get the `USER` role.
 
@@ -159,8 +167,8 @@ Passwords are stored using BCrypt (`BCryptPasswordEncoder`).
 }
 ```
 
-3. Execute. You should get 200 and a localized success message (`Accept-Language` applies).
-4. Then call `GET /api/auth/me` or any task endpoint in the same tab.
+1. Execute. You should get 200 and a localized success message (`Accept-Language` applies).
+2. Then call `GET /api/auth/me` or any task endpoint in the same tab.
 
 **Option B: HTTP Basic in Swagger**
 
@@ -180,28 +188,32 @@ Use the same browser tab so the session cookie is sent.
 
 ### User roles
 
+
 | Role    | Description                                       |
 | ------- | ------------------------------------------------- |
 | `USER`  | Can manage own tasks and own profile only         |
 | `ADMIN` | Can manage all users, all profiles, and all tasks |
 
+
 ### Endpoint access rules
 
-| Endpoint                                     | Access                                       |
-| -------------------------------------------- | -------------------------------------------- |
-| `GET /api/info`                              | Public                                       |
-| `POST /api/auth/register`                    | Public                                       |
-| `POST /api/auth/login`                       | Public                                       |
-| `POST /api/auth/logout`                      | Authenticated                                |
-| `GET /api/auth/me`                           | Authenticated                                |
-| `POST /api/tasks`                            | Authenticated (owner = current user)         |
-| `GET /api/tasks`                             | Authenticated (USER: own tasks; ADMIN: all)  |
-| `GET/PUT/DELETE /api/tasks/{id}`             | Task owner or ADMIN                          |
-| `GET /api/users/{id}`, `PUT /api/users/{id}` | Self or ADMIN                                |
-| `GET /api/users`                             | ADMIN only                                   |
-| `POST /api/users`                            | ADMIN only                                   |
-| `DELETE /api/users/{id}`                     | ADMIN only                                   |
-| Swagger UI, H2 console, OpenAPI docs         | Public                                       |
+
+| Endpoint                                     | Access                                      |
+| -------------------------------------------- | ------------------------------------------- |
+| `GET /api/info`                              | Public                                      |
+| `POST /api/auth/register`                    | Public                                      |
+| `POST /api/auth/login`                       | Public                                      |
+| `POST /api/auth/logout`                      | Authenticated                               |
+| `GET /api/auth/me`                           | Authenticated                               |
+| `POST /api/tasks`                            | Authenticated (owner = current user)        |
+| `GET /api/tasks`                             | Authenticated (USER: own tasks; ADMIN: all) |
+| `GET/PUT/DELETE /api/tasks/{id}`             | Task owner or ADMIN                         |
+| `GET /api/users/{id}`, `PUT /api/users/{id}` | Self or ADMIN                               |
+| `GET /api/users`                             | ADMIN only                                  |
+| `POST /api/users`                            | ADMIN only                                  |
+| `DELETE /api/users/{id}`                     | ADMIN only                                  |
+| Swagger UI, H2 console, OpenAPI docs         | Public                                      |
+
 
 ### ADMIN-only functionality
 
@@ -262,34 +274,3 @@ Disabled in `SecurityConfig` (REST API, no HTML forms).
 - Entities are never returned directly (only DTOs).
 - Passwords are never returned in API responses.
 
-## Screenshots
-
-Unauthenticated `GET /api/tasks` returns 401:
-![Unauthenticated request returns 401](screenshots/unauthorized.png)
-
-User registration:
-![Successful registration](screenshots/registration.png)
-
-Hashed passwords in the database:
-![BCrypt-hashed passwords in H2](screenshots/hashed_passwords.png)
-
-Successful login:
-![Successful login](screenshots/successful_login.png)
-
-USER trying to list all users (forbidden by business logic):
-![403 Forbidden for non-admin](screenshots/forbidden.png)
-
-USER trying to access another user's profile returns 403:
-![403 on cross-user profile access](screenshots/forbidden2.png)
-
-USER accessing own profile (allowed):
-![Own profile access succeeds](screenshots/allowed.png)
-
-Logout:
-![Logout response](screenshots/logout.png)
-
-Login with wrong password returns 401:
-![401 on bad credentials](screenshots/wrongpassw.png)
-
-ADMIN calling `GET /api/users` returns 200:
-![ADMIN can list all users](screenshots/admin.png)
