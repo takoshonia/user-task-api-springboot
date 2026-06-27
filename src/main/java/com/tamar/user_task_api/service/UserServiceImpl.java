@@ -7,6 +7,8 @@ import com.tamar.user_task_api.entity.User;
 import com.tamar.user_task_api.exception.DuplicateEmailException;
 import com.tamar.user_task_api.exception.ResourceNotFoundException;
 import com.tamar.user_task_api.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,8 @@ import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,7 +40,9 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(request.role());
-        return toResponse(userRepository.save(user));
+        User saved = userRepository.save(user);
+        log.info("Admin created user: {}", saved.getEmail());
+        return toResponse(saved);
     }
 
     @Override
@@ -77,6 +83,7 @@ public class UserServiceImpl implements UserService {
     public void delete(Long id) {
         User existingUser = findUserById(id);
         userRepository.delete(existingUser);
+        log.info("Admin deleted user with id {}", id);
     }
 
     private User findUserById(Long id) {

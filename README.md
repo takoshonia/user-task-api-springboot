@@ -12,6 +12,8 @@ Spring Boot REST API for managing users and their tasks. Uses Spring Security wi
 - H2 Database (dev) / PostgreSQL (prod)
 - Bean Validation
 - SpringDoc OpenAPI (Swagger)
+- Spring Boot Actuator (health, info, metrics)
+- JUnit 5, Mockito, MockMvc, JaCoCo
 
 ## Project structure
 
@@ -23,7 +25,7 @@ Layered architecture:
 - `entity` - JPA entities
 - `dto` - request/response models
 - `exception` - global error handling
-- `config` - Security, OpenAPI, seed data
+- `config` - Security, OpenAPI, AppSettings, Actuator, locale, seed data
 - `security` - UserDetails, REST 401/403 handlers
 
 ## Data model
@@ -110,18 +112,67 @@ Localized responses:
 
 ### Logging
 
-SLF4J logging in `AuthController`, `AuthServiceImpl`, `TaskServiceImpl`, and `GlobalExceptionHandler`.
+SLF4J / Logback in `AuthController`, `AuthServiceImpl`, `UserServiceImpl`, `TaskServiceImpl`, and `GlobalExceptionHandler`.
 
+| Level | Where |
+| ----- | ----- |
+| INFO | Registration, login/logout, task creation, admin user create/delete |
+| DEBUG | Task deletion (dev profile) |
+| WARN | Validation, access denied, not found, bad credentials |
+| ERROR | Unexpected exceptions |
 
-| Level | Where                                                 |
-| ----- | ----------------------------------------------------- |
-| INFO  | User registration, login, task creation               |
-| DEBUG | Task deletion (dev profile)                           |
-| WARN  | Validation, access denied, not found, bad credentials |
-| ERROR | Unexpected exceptions                                 |
+- Console and file logging (`logs/app.log`)
+- Rolling policy: 10 MB per file, 7 days history
+- Profile levels: dev `DEBUG`/`INFO`, prod `WARN`/`ERROR`
+- Parameterized messages (e.g. `log.info("User registered: {}", email)`)
 
+### Testing
 
-Log file path: `**logs/app.log`** (project root). Rotation: 10 MB per file, 7 days history. The `logs/` folder is gitignored.
+Run all tests:
+
+```powershell
+mvn test
+```
+
+Generate JaCoCo coverage report:
+
+```powershell
+mvn test jacoco:report
+```
+
+Report: `target/site/jacoco/index.html`
+
+| Type | Examples |
+| ---- | -------- |
+| Unit (`@ExtendWith(MockitoExtension.class)`) | `AuthServiceImplTest`, `UserServiceImplTest`, `TaskServiceImplTest` |
+| `@WebMvcTest` | `InfoControllerTest` |
+| `@DataJpaTest` | `UserRepositoryTest`, `TaskRepositoryTest` |
+| Integration (`@SpringBootTest` + MockMvc / `TestRestTemplate`) | `ApiSecurityIntegrationTest`, `TaskFlowIntegrationTest`, `ActuatorIntegrationTest` |
+
+Covers positive and negative cases: successful registration, duplicate email, 401/403 security, validation errors (parameterized), task ownership, actuator access rules.
+
+### Monitoring (Actuator)
+
+| Endpoint | Access | Description |
+| -------- | ------ | ----------- |
+| `GET /actuator/health` | Public | Application health (`UP`/`DOWN`) |
+| `GET /actuator/info` | Public | App metadata from `AppSettings` |
+| `GET /actuator/metrics` | ADMIN only | Micrometer metrics list |
+
+Examples:
+
+```powershell
+# health (no auth)
+curl http://localhost:8081/actuator/health
+
+# info (no auth)
+curl http://localhost:8081/actuator/info
+
+# metrics (admin basic auth)
+curl -u admin@example.com:admin123 http://localhost:8081/actuator/metrics
+```
+
+Health details are shown only for authenticated ADMIN users (`show-details=when-authorized`).
 
 ---
 
@@ -201,6 +252,8 @@ Use the same browser tab so the session cookie is sent.
 | Endpoint                                     | Access                                      |
 | -------------------------------------------- | ------------------------------------------- |
 | `GET /api/info`                              | Public                                      |
+| `GET /actuator/health`, `GET /actuator/info` | Public                                      |
+| `GET /actuator/metrics`                      | ADMIN only                                  |
 | `POST /api/auth/register`                    | Public                                      |
 | `POST /api/auth/login`                       | Public                                      |
 | `POST /api/auth/logout`                      | Authenticated                               |
