@@ -14,13 +14,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest//SpringBootTest is used to test the full application.
+@AutoConfigureMockMvc//AutoConfigureMockMvc is used to test the controller.
 class ApiSecurityIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+//Full Spring context + security + MockMvc → proves URL security works.
     @Test
     void tasks_withoutAuth_returns401() throws Exception {
         mockMvc.perform(get("/api/tasks"))
@@ -34,11 +35,11 @@ class ApiSecurityIntegrationTest {
                 .andExpect(jsonPath("$.applicationTitle").exists());
     }
 
-    @ParameterizedTest
-    @CsvSource({
+    @ParameterizedTest//ParameterizedTest is used to run the same test with different inputs.
+    @CsvSource({//CsvSource is used to provide the different inputs.
             "'{}', name",
             "'{\"name\":\"A\",\"email\":\"bad\",\"password\":\"short\"}', email"
-    })
+    }) //Runs the same test with different invalid JSON → both must return 400 + validationErrors.
     void register_withInvalidPayload_returns400(String body, String field) throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

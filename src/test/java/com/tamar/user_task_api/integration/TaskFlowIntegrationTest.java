@@ -17,11 +17,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class TaskFlowIntegrationTest {
+@SpringBootTest//SpringBootTest is used to test the full application.
+@AutoConfigureMockMvc//AutoConfigureMockMvc is used to test the controller.
+class TaskFlowIntegrationTest {//Tests that user can create and list their own tasks.
 
-    @Autowired
+    @Autowired//Autowired is used to inject the mockMvc object.
     private MockMvc mockMvc;
 
     @Autowired
@@ -38,22 +38,22 @@ class TaskFlowIntegrationTest {
                 """;
 
         MvcResult createResult = mockMvc.perform(post("/api/tasks")
-                        .with(httpBasic("user@example.com", "user123"))
+                        .with(httpBasic("user@example.com", "user123"))//login via HTTP Basic in test
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isCreated())
+                .andExpect(status().isCreated())//Create task → 201
                 .andExpect(jsonPath("$.title").value("Integration task"))
                 .andReturn();
 
         JsonNode created = objectMapper.readTree(createResult.getResponse().getContentAsString());
         long taskId = created.get("id").asLong();
 
-        MvcResult listResult = mockMvc.perform(get("/api/tasks")
-                        .with(httpBasic("user@example.com", "user123")))
-                .andExpect(status().isOk())
+        MvcResult listResult = mockMvc.perform(get("/api/tasks")//List tasks → created task id appears in list
+                        .with(httpBasic("user@example.com", "user123")))//login via HTTP Basic in test
+                .andExpect(status().isOk())//List tasks → 200
                 .andReturn();
 
-        JsonNode tasks = objectMapper.readTree(listResult.getResponse().getContentAsString());
+        JsonNode tasks = objectMapper.readTree(listResult.getResponse().getContentAsString());//Parse JSON response
         assertThat(tasks.findValuesAsText("id")).contains(String.valueOf(taskId));
     }
 }

@@ -8,6 +8,10 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Resolves language from Accept-Language header. Default: Georgian (ka).
+ * Works with messages.properties / messages_en.properties and GlobalExceptionHandler.
+ */
 @Configuration
 public class LocaleConfig {
 

@@ -15,6 +15,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * User CRUD logic. Called by UserController — controller only handles HTTP.
+ * Duplicate email → DuplicateEmailException → GlobalExceptionHandler → 409.
+ * Password is BCrypt-hashed here; UserResponse never includes password.
+ * Self-or-ADMIN access on get/update is enforced on UserController via @PreAuthorize.
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -39,7 +45,7 @@ public class UserServiceImpl implements UserService {
         user.setName(request.name());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRole(request.role());
+        user.setRole(request.role()); // admin can assign USER or ADMIN (unlike public register)
         User saved = userRepository.save(user);
         log.info("Admin created user: {}", saved.getEmail());
         return toResponse(saved);

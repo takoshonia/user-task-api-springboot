@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+/** 401 when not authenticated. Used by SecurityConfig for protected endpoints without valid login. */
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 

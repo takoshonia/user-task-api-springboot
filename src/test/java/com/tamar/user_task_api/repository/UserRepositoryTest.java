@@ -9,13 +9,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+@DataJpaTest//DataJpaTest is used to test the data access layer for the user repository. Uses real JPA + in-memory test DB (not Mockito)
 class UserRepositoryTest {
-
+//Tests that existsByEmail, findByEmail, existsByEmailAndIdNot actually work with SQL
     @Autowired
     private UserRepository userRepository;
 
-    @BeforeEach
+    @BeforeEach//@BeforeEach cleans DB before each test — tests don’t affect each other
     void setUp() {
         userRepository.deleteAll();
     }

@@ -8,6 +8,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Spring Security wrapper around User entity. Stored in SecurityContext after login.
+ * TaskServiceImpl.getCurrentUser() reads principal.user to know who is logged in.
+ * getAuthorities() maps Role enum to ROLE_USER / ROLE_ADMIN for @PreAuthorize checks.
+ */
 public class UserPrincipal implements UserDetails {
 
     private final User user;

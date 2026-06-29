@@ -28,6 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * HTTP layer for user CRUD. Delegates to UserService.
+ * URL rules in SecurityConfig (ADMIN for list/create/delete).
+ * getById/update also use @PreAuthorize here so USER can access own profile only.
+ */
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "Users", description = "User management endpoints (ADMIN restrictions apply)")

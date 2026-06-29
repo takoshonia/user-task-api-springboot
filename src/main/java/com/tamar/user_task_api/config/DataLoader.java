@@ -8,6 +8,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+/**
+ * Seeds admin and test user on startup — dev profile only (@Profile("dev")).
+ * Uses same UserRepository + PasswordEncoder as runtime registration.
+ */
 @Component
 @Profile("dev")
 public class DataLoader implements CommandLineRunner {

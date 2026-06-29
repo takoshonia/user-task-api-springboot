@@ -7,6 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+/**
+ * Custom app config from app.settings.* in profile property files.
+ * Injected into InfoController (GET /api/info) and AppInfoContributor (/actuator/info).
+ * @Validated ensures bad config fails at startup, not at runtime.
+ */
 @Component
 @Validated
 @ConfigurationProperties(prefix = "app.settings")

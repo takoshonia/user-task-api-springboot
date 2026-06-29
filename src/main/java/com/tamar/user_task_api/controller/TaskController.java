@@ -26,6 +26,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * HTTP layer for tasks. Thin controller: validate JSON (@Valid) → delegate to TaskService.
+ * Security: /api/tasks/** requires login (SecurityConfig). Ownership rules live in TaskServiceImpl.
+ */
 @RestController
 @RequestMapping("/api/tasks")
 @Tag(name = "Tasks", description = "Task management endpoints (authentication required)")

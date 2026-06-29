@@ -13,6 +13,11 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * JPA entity → "users" table. Used internally by repositories and services.
+ * Never returned directly to API clients — use UserResponse DTO instead (no password in JSON).
+ * One user has many tasks (@OneToMany); foreign key lives on Task.user_id.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -31,7 +36,7 @@ public class User {
     private String email;
 
     @Column(nullable = false, length = 100)
-    private String password;
+    private String password; // BCrypt hash only — set in AuthServiceImpl / UserServiceImpl
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

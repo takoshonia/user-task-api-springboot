@@ -15,6 +15,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * URL-level security (which endpoints are public / authenticated / ADMIN).
+ * Method-level rules live on controllers and services via @PreAuthorize.
+ * Login uses JSON session (AuthController) or HTTP Basic; both share this config.
+ * 401 → RestAuthenticationEntryPoint | 403 → RestAccessDeniedHandler
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -42,6 +48,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // REST API + Swagger: no browser form posts, so CSRF disabled (see README)
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .sessionManagement(session -> session
@@ -64,6 +71,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/me").authenticated()
                         .anyRequest().authenticated())
                 .httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint))
+                // Logout handled by AuthController POST /api/auth/logout
                 .logout(logout -> logout.disable());
 
         return http.build();

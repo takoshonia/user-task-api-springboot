@@ -18,6 +18,14 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Central error → JSON mapping for all controllers. Services throw exceptions;
+ * this class picks HTTP status and localized message (messages.properties / messages_en).
+ *
+ * ResourceNotFoundException → 404 | DuplicateEmailException → 409
+ * AccessDeniedException → 403 | BadCredentialsException → 401
+ * MethodArgumentNotValidException → 400 (+ validationErrors map)
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

@@ -20,6 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Task business logic. Called by TaskController after @Valid passes.
+ * Flow: DTO → build Task entity → TaskRepository → Entity → TaskResponse DTO.
+ * Owner is always the logged-in user (set in create). USER sees own tasks only;
+ * ADMIN sees all. ensureCanAccess() enforces ownership on get/update/delete.
+ */
 @Service
 public class TaskServiceImpl implements TaskService {
 
@@ -43,7 +49,7 @@ public class TaskServiceImpl implements TaskService {
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setStatus(request.status());
-        task.setUser(owner);
+        task.setUser(owner); // client never sends userId — owner comes from security context
 
         Task saved = taskRepository.save(task);
         log.info("Task created with id {} for user {}", saved.getId(), owner.getId());
@@ -99,6 +105,7 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
     }
 
+    /** Reads logged-in user from SecurityContext (set at login) and reloads from DB. */
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
@@ -114,6 +121,7 @@ public class TaskServiceImpl implements TaskService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_" + Role.ADMIN.name()));
     }
 
+    /** USER may only access own tasks; ADMIN bypasses this check. */
     private void ensureCanAccess(Task task) {
         if (isAdmin()) {
             return;

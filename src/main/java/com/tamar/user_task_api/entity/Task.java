@@ -12,6 +12,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * JPA entity → "tasks" table. Many tasks belong to one user (user_id FK).
+ * TaskServiceImpl sets user (owner) from logged-in user on create.
+ * Mapped to API via TaskResponse DTO in the service layer.
+ */
 @Entity
 @Table(name = "tasks")
 public class Task {

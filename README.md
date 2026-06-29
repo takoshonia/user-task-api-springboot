@@ -28,12 +28,16 @@ Layered architecture:
 - `config` - Security, OpenAPI, AppSettings, Actuator, locale, seed data
 - `security` - UserDetails, REST 401/403 handlers
 
+
+
 ## Data model
 
 - `User` (id, name, email, password, role)
 - `Task` (id, title, description, status, user)
 - One user has many tasks (`OneToMany` / `ManyToOne`)
 - Roles: `USER`, `ADMIN`
+
+
 
 ## How to run
 
@@ -52,6 +56,16 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
 Dev uses H2 and seeds test users. Prod uses PostgreSQL. App runs on [http://localhost:8081](http://localhost:8081).
+
+### Quick links (dev)
+
+| Tool | URL | Notes |
+| ---- | --- | ----- |
+| Swagger UI | [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html) | Test all API endpoints |
+| H2 Console | [http://localhost:8081/h2-console](http://localhost:8081/h2-console) | DB browser (dev only); see [H2 login](#useful-urls) below |
+| Actuator health | [http://localhost:8081/actuator/health](http://localhost:8081/actuator/health) | Public |
+| Actuator info | [http://localhost:8081/actuator/info](http://localhost:8081/actuator/info) | Public |
+| Actuator metrics | [http://localhost:8081/actuator/metrics](http://localhost:8081/actuator/metrics) | ADMIN only |
 
 ### Profiles
 
@@ -110,21 +124,27 @@ Localized responses:
 2. `POST /api/auth/register` with empty body → field errors change by language
 3. `POST /api/auth/login` with valid credentials → success message changes by language
 
+
+
 ### Logging
 
 SLF4J / Logback in `AuthController`, `AuthServiceImpl`, `UserServiceImpl`, `TaskServiceImpl`, and `GlobalExceptionHandler`.
 
-| Level | Where |
-| ----- | ----- |
-| INFO | Registration, login/logout, task creation, admin user create/delete |
-| DEBUG | Task deletion (dev profile) |
-| WARN | Validation, access denied, not found, bad credentials |
-| ERROR | Unexpected exceptions |
+
+| Level | Where                                                               |
+| ----- | ------------------------------------------------------------------- |
+| INFO  | Registration, login/logout, task creation, admin user create/delete |
+| DEBUG | Task deletion (dev profile)                                         |
+| WARN  | Validation, access denied, not found, bad credentials               |
+| ERROR | Unexpected exceptions                                               |
+
 
 - Console and file logging (`logs/app.log`)
 - Rolling policy: 10 MB per file, 7 days history
 - Profile levels: dev `DEBUG`/`INFO`, prod `WARN`/`ERROR`
 - Parameterized messages (e.g. `log.info("User registered: {}", email)`)
+
+
 
 ### Testing
 
@@ -142,22 +162,26 @@ mvn test jacoco:report
 
 Report: `target/site/jacoco/index.html`
 
-| Type | Examples |
-| ---- | -------- |
-| Unit (`@ExtendWith(MockitoExtension.class)`) | `AuthServiceImplTest`, `UserServiceImplTest`, `TaskServiceImplTest` |
-| `@WebMvcTest` | `InfoControllerTest` |
-| `@DataJpaTest` | `UserRepositoryTest`, `TaskRepositoryTest` |
+
+| Type                                                           | Examples                                                                           |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Unit (`@ExtendWith(MockitoExtension.class)`)                   | `AuthServiceImplTest`, `UserServiceImplTest`, `TaskServiceImplTest`                |
+| `@WebMvcTest`                                                  | `InfoControllerTest`                                                               |
+| `@DataJpaTest`                                                 | `UserRepositoryTest`, `TaskRepositoryTest`                                         |
 | Integration (`@SpringBootTest` + MockMvc / `TestRestTemplate`) | `ApiSecurityIntegrationTest`, `TaskFlowIntegrationTest`, `ActuatorIntegrationTest` |
+
 
 Covers positive and negative cases: successful registration, duplicate email, 401/403 security, validation errors (parameterized), task ownership, actuator access rules.
 
 ### Monitoring (Actuator)
 
-| Endpoint | Access | Description |
-| -------- | ------ | ----------- |
-| `GET /actuator/health` | Public | Application health (`UP`/`DOWN`) |
-| `GET /actuator/info` | Public | App metadata from `AppSettings` |
-| `GET /actuator/metrics` | ADMIN only | Micrometer metrics list |
+
+| Endpoint                | Access     | Description                      |
+| ----------------------- | ---------- | -------------------------------- |
+| `GET /actuator/health`  | Public     | Application health (`UP`/`DOWN`) |
+| `GET /actuator/info`    | Public     | App metadata from `AppSettings`  |
+| `GET /actuator/metrics` | ADMIN only | Micrometer metrics list          |
+
 
 Examples:
 
@@ -176,6 +200,8 @@ Health details are shown only for authenticated ADMIN users (`show-details=when-
 
 ---
 
+
+
 ## Useful URLs
 
 - Swagger UI: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
@@ -189,7 +215,11 @@ H2 login values:
 
 ---
 
+
+
 ## Security
+
+
 
 ### Login credentials (seeded on startup)
 
@@ -246,6 +276,8 @@ Use the same browser tab so the session cookie is sent.
 | `ADMIN` | Can manage all users, all profiles, and all tasks |
 
 
+
+
 ### Endpoint access rules
 
 
@@ -268,6 +300,8 @@ Use the same browser tab so the session cookie is sent.
 | Swagger UI, H2 console, OpenAPI docs         | Public                                      |
 
 
+
+
 ### ADMIN-only functionality
 
 - List all users (`GET /api/users`)
@@ -275,11 +309,15 @@ Use the same browser tab so the session cookie is sent.
 - Delete users (`DELETE /api/users/{id}`)
 - Checked at URL level in `SecurityConfig` and at method level with `@PreAuthorize("hasRole('ADMIN')")` on `UserServiceImpl`.
 
+
+
 ### Authenticated-only functionality
 
 - All task CRUD under `/api/tasks/**`
 - Current user profile: `GET /api/auth/me`
 - Checked at URL level and with `@PreAuthorize("isAuthenticated()")` on task service methods and `AuthServiceImpl.getCurrentUser()`.
+
+
 
 ### Method security (`@PreAuthorize`)
 
@@ -288,13 +326,19 @@ Enabled via `@EnableMethodSecurity` in `SecurityConfig`. Examples:
 - `@PreAuthorize("hasRole('ADMIN')")` on `UserServiceImpl.create`, `findAll`, `delete`
 - `@PreAuthorize("isAuthenticated()")` on `TaskServiceImpl` methods and `AuthServiceImpl.getCurrentUser()`
 
+
+
 ### CSRF
 
 Disabled in `SecurityConfig` (REST API, no HTML forms).
 
 ---
 
+
+
 ## Main endpoints
+
+
 
 ### Authentication
 
@@ -304,6 +348,8 @@ Disabled in `SecurityConfig` (REST API, no HTML forms).
 - `POST /api/auth/logout` - logout
 - `GET /api/auth/me` - current user profile
 
+
+
 ### Users
 
 - `POST /api/users` - ADMIN only
@@ -312,6 +358,8 @@ Disabled in `SecurityConfig` (REST API, no HTML forms).
 - `PUT /api/users/{id}` - self or ADMIN (partial updates supported)
 - `DELETE /api/users/{id}` - ADMIN only
 
+
+
 ### Tasks
 
 - `POST /api/tasks` - authenticated, owner set to current user
@@ -319,6 +367,8 @@ Disabled in `SecurityConfig` (REST API, no HTML forms).
 - `GET /api/tasks/{id}` - task owner or ADMIN
 - `PUT /api/tasks/{id}` - task owner or ADMIN
 - `DELETE /api/tasks/{id}` - task owner or ADMIN
+
+
 
 ## Notes
 

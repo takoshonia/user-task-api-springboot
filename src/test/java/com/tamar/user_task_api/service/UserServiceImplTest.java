@@ -22,24 +22,26 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)//Enables Mockito
 class UserServiceImplTest {
 
-    @Mock
+    @Mock//@Mock annotation is used to create a mock object. Fake repository/encoder — no real DB
     private UserRepository userRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
+    @InjectMocks //Real UserServiceImpl with mocks injected
     private UserServiceImpl userService;
 
-    @Test
+    @Test //positive unit test
     void create_persistsAdminCreatedUser() {
         UserCreateRequest request = new UserCreateRequest("Admin", "admin2@example.com", "password123", Role.ADMIN);
+        //arrange - set up the mock objects and the expected repo behavior
         when(userRepository.existsByEmail("admin2@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("hash");
 
+        //act, call the method under test
         User saved = new User();
         saved.setId(2L);
         saved.setName("Admin");
@@ -48,27 +50,30 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(saved);
 
         var response = userService.create(request);
-
+        //assert, verify the result
         assertThat(response.email()).isEqualTo("admin2@example.com");
         assertThat(response.role()).isEqualTo(Role.ADMIN);
     }
 
-    @Test
+    @Test //negative unit test, Checks: duplicate email → exception, save never called.
     void create_throwsWhenEmailExists() {
         UserCreateRequest request = new UserCreateRequest("Admin", "admin2@example.com", "password123", Role.ADMIN);
-        when(userRepository.existsByEmail("admin2@example.com")).thenReturn(true);
+        //arrange - set up the mock objects and the expected repo behavior
+        when(userRepository.existsByEmail("admin2@example.com")).thenReturn(true);// means the email already exists in the database
 
+        //act, call the method under test
         assertThatThrownBy(() -> userService.create(request))
                 .isInstanceOf(DuplicateEmailException.class);
 
+        //assert, verify the result
         verify(userRepository, never()).save(any());
     }
 
-    @Test
+    @Test //negative unit test
     void findById_throwsWhenUserMissing() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());// means the user is not found in the database
 
-        assertThatThrownBy(() -> userService.findById(99L))
+        assertThatThrownBy(() -> userService.findById(99L))//throws a ResourceNotFoundException if the user is not found in the database
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 }

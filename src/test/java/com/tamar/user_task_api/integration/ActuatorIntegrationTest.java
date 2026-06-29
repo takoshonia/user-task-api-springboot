@@ -12,22 +12,22 @@ import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)//SpringBootTest is used to test the application. WebEnvironment.RANDOM_PORT is used to test the application on a random port.
 class ActuatorIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private TestRestTemplate restTemplate;//TestRestTemplate is a template for testing the REST endpoints.  
 
     @Test
-    void health_isPublic() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/actuator/health", String.class);
+    void health_isPublic() {//tests the health endpoint.
+        ResponseEntity<String> response = restTemplate.getForEntity("/actuator/health", String.class);//performs a GET request to the /actuator/health endpoint.
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("\"status\":\"UP\"");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);//checks if the status is OK. 200 OK
+        assertThat(response.getBody()).contains("\"status\":\"UP\"");//checks if the body contains "status":"UP".
     }
 
     @Test
-    void info_isPublicAndContainsAppSettings() {
+    void info_isPublicAndContainsAppSettings() {//tests the info endpoint.
         ResponseEntity<String> response = restTemplate.getForEntity("/actuator/info", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -47,13 +47,13 @@ class ActuatorIntegrationTest {
     @Test
     void metrics_isAvailableForAdmin() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth("admin@example.com", "admin123");
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        headers.setBasicAuth("admin@example.com", "admin123");//sets the basic authentication credentials.
+        HttpEntity<Void> entity = new HttpEntity<>(headers);//creates a new entity with the headers.
 
         ResponseEntity<String> response = restTemplate.exchange(
-                "/actuator/metrics", HttpMethod.GET, entity, String.class);
+                "/actuator/metrics", HttpMethod.GET, entity, String.class);//performs a GET request to the /actuator/metrics endpoint.
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("names");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);//checks if the status is OK.
+        assertThat(response.getBody()).contains("names");//checks if the body contains "names".
     }
 }

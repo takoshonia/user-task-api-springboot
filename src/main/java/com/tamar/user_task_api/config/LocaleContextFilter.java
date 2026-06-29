@@ -13,6 +13,10 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import java.io.IOException;
 
+/**
+ * Sets locale early in the request so security filters and GlobalExceptionHandler
+ * see the same language as controllers (from Accept-Language header).
+ */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class LocaleContextFilter extends OncePerRequestFilter {

@@ -36,6 +36,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+/**
+ * Public auth endpoints (register, login, logout) + GET /me for logged-in profile.
+ * Login: AuthenticationManager checks BCrypt password → stores auth in session.
+ * After login, same browser tab can call protected endpoints without re-entering credentials.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Registration, login, logout, and profile")

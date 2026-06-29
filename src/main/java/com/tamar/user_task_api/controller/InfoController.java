@@ -8,6 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Public endpoint exposing profile-specific config from AppSettings.
+ * Values come from application-dev.properties / application-prod.properties (app.settings.*).
+ * Similar data also appears on GET /actuator/info via AppInfoContributor.
+ */
 @RestController
 @RequestMapping("/api/info")
 @Tag(name = "Info")

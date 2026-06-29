@@ -14,6 +14,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Registration and current-user profile. Login itself is in AuthController
+ * (AuthenticationManager + session). Register always assigns Role.USER.
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 

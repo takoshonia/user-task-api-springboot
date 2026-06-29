@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+/** 403 when logged in but not allowed (wrong role). Used by SecurityConfig before controller runs. */
 @Component
 public class RestAccessDeniedHandler implements AccessDeniedHandler {
 
